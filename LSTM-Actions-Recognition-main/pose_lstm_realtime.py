@@ -132,6 +132,7 @@ while True:
 
             frame = draw_landmark_on_image(mpDraw, results, frame)
         frame = draw_class_on_image(label, frame)
+        cv2.imshow("image", frame)
         try:
             cv2.imshow("image", frame)
             key = cv2.waitKey(1) & 0xFF

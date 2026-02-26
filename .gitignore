@@ -40,6 +40,8 @@ processed_data/
 *.h5
 *.sqlite3
 *.db
+*.txt
+*.jpg
 
 # Models, checkpoints and weights
 models/
