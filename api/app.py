@@ -13,8 +13,10 @@ from services.pipeline_manager import pipeline_manager
 logger = logging.getLogger("ProjectVision.App")
 
 
-def create_app(start_pipelines: bool = True) -> Flask:
+def create_app(start_pipelines: bool = None) -> Flask:
     """Creates and configures the Flask application."""
+    if start_pipelines is None:
+        start_pipelines = getattr(config, "AUTO_START_CAMERAS", False)
     app = Flask(
         __name__,
         template_folder=str(config.TEMPLATES_FOLDER),

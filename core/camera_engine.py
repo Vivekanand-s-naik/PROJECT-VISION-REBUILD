@@ -278,15 +278,19 @@ class CameraEngine:
 
             return SharedCameraSource(self._shared_masters[target_key])
 
-        # Physical hardware camera or file
+        # Physical hardware camera index (e.g. "0", "1")
+        # Automatically registers into _shared_masters so multiple pipelines multiplex single hardware webcam
         if spec_clean.isdigit():
-            cam_idx = int(spec_clean)
-            opencv_source = OpenCVCameraSource(cam_idx)
-            if not opencv_source.is_opened():
-                if self._auto_fallback_to_synthetic:
+            target_key = spec_clean
+            if target_key not in self._shared_masters:
+                cam_idx = int(target_key)
+                master = OpenCVCameraSource(cam_idx)
+                if not master.is_opened() and self._auto_fallback_to_synthetic:
                     logger.warning(f"Webcam index {cam_idx} not found on system. Falling back to Synthetic source.")
-                    return SyntheticCameraSource(name=f"Camera-{cam_id.upper()}")
-            return opencv_source
+                    master = SyntheticCameraSource(name=f"SharedMaster-{target_key}")
+                self._shared_masters[target_key] = master
+
+            return SharedCameraSource(self._shared_masters[target_key])
 
         # RTSP, HTTP, or video file path
         opencv_source = OpenCVCameraSource(spec)

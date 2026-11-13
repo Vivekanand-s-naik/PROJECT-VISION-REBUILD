@@ -56,20 +56,34 @@ class CameraPipelineWorker:
             if self._running:
                 return
             self._running = True
-            self._thread = threading.Thread(
-                target=self._run_loop,
-                daemon=True,
-                name=f"Worker-{self.camera_id}-{self.pipeline_type}"
-            )
-            self._thread.start()
-            logger.info(f"Started pipeline worker for {self.camera_id} [{self.pipeline_type}]")
 
-    def stop(self):
+        # If an existing thread is still winding down, wait cleanly
+        if self._thread and self._thread.is_alive():
+            self._thread.join(timeout=1.0)
+
+        self._thread = threading.Thread(
+            target=self._run_loop,
+            daemon=True,
+            name=f"Worker-{self.camera_id}-{self.pipeline_type}"
+        )
+        self._thread.start()
+        logger.info(f"Started pipeline worker for {self.camera_id} [{self.pipeline_type}]")
+
+    def signal_stop(self):
         with self._lock:
             self._running = False
+
+    def wait_stopped(self, timeout: float = 0.5):
         if self._thread and self._thread.is_alive():
-            self._thread.join(timeout=1.5)
-            logger.info(f"Stopped pipeline worker for {self.camera_id}")
+            self._thread.join(timeout=timeout)
+        self._thread = None
+        with self._lock:
+            self._latest_output_frame = None
+
+    def stop(self):
+        self.signal_stop()
+        self.wait_stopped()
+        logger.info(f"Stopped pipeline worker for {self.camera_id}")
 
     def _run_loop(self):
         while self._running:
@@ -158,6 +172,11 @@ class PipelineManager:
         self.workers: Dict[str, CameraPipelineWorker] = {}
         self._lock = threading.Lock()
         self._initialized = False
+        self._system_active = False
+
+    @property
+    def is_active(self) -> bool:
+        return self._system_active
 
     def initialize(self):
         """Builds all AI models and registers the default 4-camera pipeline."""
@@ -188,21 +207,31 @@ class PipelineManager:
     def start_all(self):
         """Start all registered camera processing threads."""
         self.initialize()
+        # Ensure camera engine has active camera sources initialized
+        camera_engine.initialize_cameras()
         with self._lock:
             for worker in self.workers.values():
                 worker.start()
-        logger.info("All camera pipeline workers started.")
+            self._system_active = True
+        logger.info("All camera pipeline workers started. Vision system is ACTIVE.")
 
     def stop_all(self):
         """Stop all camera processing threads and release resources."""
         with self._lock:
+            # Signal stop to all workers concurrently
             for worker in self.workers.values():
-                worker.stop()
+                worker.signal_stop()
+            # Wait for threads to terminate with short timeout
+            for worker in self.workers.values():
+                worker.wait_stopped(timeout=0.3)
             camera_engine.release_all()
-        logger.info("All camera pipeline workers stopped.")
+            self._system_active = False
+        logger.info("All camera pipeline workers stopped. Vision system is in STANDBY.")
 
     def get_frame(self, camera_id: str) -> Optional[np.ndarray]:
         """Fetch the latest processed frame from a camera worker."""
+        if not self._system_active:
+            return None
         worker = self.workers.get(camera_id)
         if worker is not None:
             return worker.get_latest_frame()
@@ -216,30 +245,64 @@ class PipelineManager:
                 statuses[cam_id] = worker.get_status()
         return statuses
 
+    def _create_standby_frame(self, camera_id: str) -> np.ndarray:
+        """Generates a styled offline/standby frame when cameras are not running."""
+        frame = np.full((480, 640, 3), (25, 23, 15), dtype=np.uint8)  # Deep slate #0f172a
+        # Decorative border
+        cv2.rectangle(frame, (8, 8), (632, 472), (45, 40, 30), 1)
+        cv2.rectangle(frame, (10, 10), (630, 470), (55, 50, 40), 1)
+
+        # Center card
+        cv2.rectangle(frame, (110, 130), (530, 350), (35, 30, 22), -1)
+        cv2.rectangle(frame, (110, 130), (530, 350), (70, 60, 45), 1)
+
+        cam_names = {
+            "cam_1": "CAM 01: ENTRANCE (ATTENDANCE)",
+            "cam_2": "CAM 02: HALLWAY (POSE & ACTION)",
+            "cam_3": "CAM 03: WORKSTATION (GAZE & FOCUS)",
+            "cam_4": "CAM 04: PERIMETER (THREAT & WEAPON)",
+            "cam_cctv": "CAM CCTV: MOTION DETECTOR"
+        }
+        cam_title = cam_names.get(camera_id, camera_id.upper())
+
+        cv2.putText(frame, cam_title, (135, 175), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (220, 220, 220), 2)
+        cv2.putText(frame, "SYSTEM STANDBY - CAMERAS INACTIVE", (135, 225), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 180, 255), 2)
+        cv2.putText(frame, "Click 'Start System' button in dashboard to activate feed", (135, 270), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (160, 160, 160), 1)
+        cv2.putText(frame, "Role-Based Gating: Admin or Faculty Authorization Required", (135, 310), cv2.FONT_HERSHEY_SIMPLEX, 0.40, (120, 120, 120), 1)
+
+        # Bottom HUD bar
+        cv2.putText(frame, f"STATUS: STANDBY | STREAM: {camera_id.upper()} | {time.strftime('%H:%M:%S')}", (20, 455), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (100, 100, 100), 1)
+        return frame
+
     def generate_mjpeg_stream(self, camera_id: str) -> Generator[bytes, None, None]:
         """
         Yields multipart MJPEG HTTP stream frames for browser <img src="..."> tags.
         """
-        fallback_counter = 0
         while True:
-            frame = self.get_frame(camera_id)
-            if frame is None:
-                # Generate placeholder frame if pipeline is starting
-                placeholder = np.zeros((480, 640, 3), dtype=np.uint8)
-                cv2.putText(placeholder, f"{camera_id.upper()} Initializing...",
-                            (160, 240), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (200, 200, 200), 2)
-                frame = placeholder
-
             try:
+                if not self._system_active:
+                    frame = self._create_standby_frame(camera_id)
+                else:
+                    frame = self.get_frame(camera_id)
+                    if frame is None:
+                        # Warm-up fallback: read raw frame directly from camera engine
+                        success, raw = camera_engine.get_frame(camera_id)
+                        if success and raw is not None:
+                            frame = raw
+                        else:
+                            frame = self._create_standby_frame(camera_id)
+
                 ret, jpeg_buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
                 if ret:
                     frame_bytes = jpeg_buffer.tobytes()
                     yield (b'--frame\r\n'
                            b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n\r\n')
+            except GeneratorExit:
+                break
             except Exception as e:
                 logger.error(f"Error encoding MJPEG frame for {camera_id}: {e}")
 
-            time.sleep(0.035)  # ~28 FPS stream rate
+            time.sleep(0.04)  # 25 FPS stream rate
 
 
 # Global PipelineManager instance

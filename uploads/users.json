@@ -1,0 +1,47 @@
+{
+  "admin@vision.ai": {
+    "id": "usr_admin_001",
+    "email": "admin@vision.ai",
+    "password_hash": "scrypt:32768:8:1$KpBlzI2QHmZPu0XT$f0f58d6ebeff6f937a46e61e55652c143bf91863c2055a32134dad6083de66c2ef94f2e2511404b26b671e9ebddf91ce15eeb9af699226ee8431f788fa243147",
+    "name": "System Administrator",
+    "role": "admin",
+    "permissions": [
+      "all",
+      "system:start",
+      "system:stop",
+      "blockchain:audit",
+      "students:manage"
+    ]
+  },
+  "faculty@vision.ai": {
+    "id": "usr_faculty_002",
+    "email": "faculty@vision.ai",
+    "password_hash": "scrypt:32768:8:1$TPLFtDYZexZ9nI66$19ad537ba3b11dd9570817d4b64aeb6c3877fd7da3b1180e368b516519ca72a6b0fe05f83ea7b98d5d5a4ea266efca292f26ae06c1cc6d0b9bd01487956d8c75",
+    "name": "Prof. Harish Rao",
+    "role": "faculty",
+    "department": "Computer Science & Engineering",
+    "subject": "Computer Vision & AI",
+    "permissions": [
+      "system:start",
+      "system:stop",
+      "attendance:record",
+      "notes:summarize",
+      "class:analytics"
+    ]
+  },
+  "student@vision.ai": {
+    "id": "usr_student_003",
+    "email": "student@vision.ai",
+    "password_hash": "scrypt:32768:8:1$p2azwkqSdmXFyAAj$29f108ace49040c60158b2d25a759633a5bb7430c9128415cd3fd37fd88e553081d29f583b48098e120c3941832bbd9a25fcaf7e3f1bff66d3ffca3d71e31cd6",
+    "name": "Murtaza",
+    "role": "student",
+    "student_id": "321654",
+    "branch": "Robotics & Artificial Intelligence",
+    "enrolled_course": "Computer Vision & AI",
+    "permissions": [
+      "profile:view",
+      "attendance:view_own",
+      "notes:view_own"
+    ]
+  }
+}

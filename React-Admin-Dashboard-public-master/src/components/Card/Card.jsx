@@ -6,8 +6,7 @@ import { motion, AnimateSharedLayout } from "framer-motion";
 import { UilTimes } from "@iconscout/react-unicons";
 import Chart from "react-apexcharts";
 
-// parent Card
-
+// Parent Card
 const Card = (props) => {
   const [expanded, setExpanded] = useState(false);
   return (
@@ -42,9 +41,9 @@ function CompactCard({ param, setExpanded }) {
         <span>{param.title}</span>
       </div>
       <div className="detail">
-        <Png />
-        <span>${param.value}</span>
-        <span>Last 24 hours</span>
+        {Png && <Png />}
+        <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>{param.value}</span>
+        <span style={{ fontSize: "0.75rem", opacity: 0.85 }}>{param.metric_label || "Real-time Telemetry"}</span>
       </div>
     </motion.div>
   );
@@ -58,17 +57,14 @@ function ExpandedCard({ param, setExpanded }) {
         type: "area",
         height: "auto",
       },
-
       dropShadow: {
         enabled: false,
-        enabledOnSeries: undefined,
         top: 0,
         left: 0,
         blur: 3,
         color: "#000",
         opacity: 0.35,
       },
-
       fill: {
         colors: ["#fff"],
         type: "gradient",
@@ -89,16 +85,8 @@ function ExpandedCard({ param, setExpanded }) {
         show: true,
       },
       xaxis: {
-        type: "datetime",
-        categories: [
-          "2018-09-19T00:00:00.000Z",
-          "2018-09-19T01:30:00.000Z",
-          "2018-09-19T02:30:00.000Z",
-          "2018-09-19T03:30:00.000Z",
-          "2018-09-19T04:30:00.000Z",
-          "2018-09-19T05:30:00.000Z",
-          "2018-09-19T06:30:00.000Z",
-        ],
+        type: "category",
+        categories: ["Session 1", "Session 2", "Session 3", "Session 4", "Session 5", "Session 6", "Current"],
       },
     },
   };
@@ -115,11 +103,11 @@ function ExpandedCard({ param, setExpanded }) {
       <div style={{ alignSelf: "flex-end", cursor: "pointer", color: "white" }}>
         <UilTimes onClick={setExpanded} />
       </div>
-        <span>{param.title}</span>
+      <span style={{ fontWeight: "bold", fontSize: "1.2rem" }}>{param.title}</span>
       <div className="chartContainer">
-        <Chart options={data.options} series={param.series} type="area" />
+        <Chart options={data.options} series={param.series || []} type="area" />
       </div>
-      <span>Last 24 hours</span>
+      <span style={{ fontSize: "0.85rem", opacity: 0.9 }}>{param.metric_label || "Real-time Telemetry"}</span>
     </motion.div>
   );
 }

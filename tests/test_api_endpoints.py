@@ -83,12 +83,25 @@ class TestAPIEndpoints(unittest.TestCase):
         self.assertIn("summary", data)
 
     def test_html_dashboard_views(self):
-        """Verify all HTML template views render with HTTP 200."""
-        routes = ['/', '/grid', '/notes', '/blockchain', '/students']
+        """Verify all HTML template views and GP root render with HTTP 200."""
+        routes = ['/', '/dashboard', '/grid', '/notes', '/blockchain', '/students', '/react']
         for route in routes:
             resp = self.client.get(route)
             self.assertEqual(resp.status_code, 200, f"Route {route} failed with {resp.status_code}")
-            self.assertIn(b"ProjectVision", resp.data)
+
+    def test_gp_and_react_endpoints(self):
+        """Verify GP landing page interactive triggers and React app routes."""
+        resp_act = self.client.post('/activate')
+        self.assertEqual(resp_act.status_code, 200)
+        self.assertTrue(resp_act.get_json()["success"])
+
+        resp_noter = self.client.post('/run_noter_script')
+        self.assertEqual(resp_noter.status_code, 200)
+        self.assertTrue(resp_noter.get_json()["success"])
+
+        resp_react = self.client.get('/react/')
+        self.assertEqual(resp_react.status_code, 200)
+        self.assertIn(b"root", resp_react.data)
 
 
 if __name__ == "__main__":

@@ -2,7 +2,8 @@
 
 [![System Version](https://img.shields.io/badge/Version-2.0.0--Autonomous-blue.svg)](file:///d:/PROJECTS/ProjectVision)
 [![Python](https://img.shields.io/badge/Python-3.11-green.svg)](https://python.org)
-[![Tests](https://img.shields.io/badge/Tests-36%20Passed-brightgreen.svg)](file:///d:/PROJECTS/ProjectVision/tests)
+[![Tests](https://img.shields.io/badge/Tests-42%20Passed-brightgreen.svg)](file:///d:/PROJECTS/ProjectVision/tests)
+[![RBAC](https://img.shields.io/badge/RBAC-Admin%20%7C%20Faculty%20%7C%20Student-orange.svg)](file:///d:/PROJECTS/ProjectVision/core/auth.py)
 [![Platform](https://img.shields.io/badge/Architecture-Modular%20Pub--Sub-purple.svg)](file:///d:/PROJECTS/ProjectVision/core)
 
 ProjectVision is a comprehensive, production-grade intelligent multi-camera computer vision, biometric attendance, and automated surveillance command center. It unifies deep learning vision pipelines, eye gaze cognitive analytics, CCTV motion triggers, speech-to-text lecture summarization, and an immutable SHA-256 blockchain audit ledger into a responsive, real-time web interface.
@@ -164,7 +165,10 @@ Options:
 
 ### Access Web Views
 Once started, open your browser:
-- **Main Command Center**: [http://localhost:5000/](http://localhost:5000/)
+- **GP Landing Page (Root)**: [http://localhost:5000/](http://localhost:5000/)
+- **Command Center Dashboard**: [http://localhost:5000/dashboard](http://localhost:5000/dashboard)
+- **User-Specific React Dashboard**: [http://localhost:5000/react](http://localhost:5000/react)
+- **RBAC Authentication Portal**: [http://localhost:5000/login](http://localhost:5000/login)
 - **4-Camera Grid View**: [http://localhost:5000/grid](http://localhost:5000/grid)
 - **Audio Notes & Summarizer**: [http://localhost:5000/notes](http://localhost:5000/notes)
 - **Blockchain Audit Ledger**: [http://localhost:5000/blockchain](http://localhost:5000/blockchain)
@@ -172,21 +176,40 @@ Once started, open your browser:
 
 ---
 
+## Role-Based Access Control (RBAC) & System Start Gating
+
+ProjectVision implements role-based access control with pre-seeded demo accounts:
+
+| Role | Demo Email | Password | Permissions & Dashboard Experience |
+|---|---|---|---|
+| **Admin** | `admin@vision.ai` | `Admin@123` | Full system control, start/stop cameras, blockchain audit, all user access. |
+| **Faculty** | `faculty@vision.ai` | `Faculty@123` | Start/stop cameras, class attendance roll, focus analytics, AI lecture notes. |
+| **Student** | `student@vision.ai` | `Student@123` | Personal attendance history, cognitive focus radar, lecture summaries (Cameras locked). |
+
+### Camera Activation Gating & Professional Access Control
+To prevent unnecessary GPU/CPU utilization and protect user privacy, camera pipelines **remain in standby by default**. They start only when an authorized **Admin** or **Faculty** clicks the **"Start System"** button located in the authenticated **Command Center Dashboard** (`/dashboard`), **4-Quadrant Camera Matrix** (`/grid`), or **React Admin Dashboard** (`/react`). Standby feeds display a styled offline HUD until started.
+
+> [!NOTE]
+> The public institutional landing page (`/`) serves purely as a corporate showcase and client portal entrypoint (`/login`). Internal operational switches such as "Start System" and direct internal dashboard links are strictly excluded from the unauthenticated public homepage.
+
+---
+
 ## Running Automated Tests
 
-Run the full automated test suite (36 tests):
+Run the full automated test suite (42 tests):
 ```bash
-python -m unittest discover -s tests -p "test_*.py"
+uv run python -m unittest discover -s tests -p "test_*.py"
 ```
 
 Run specific test modules:
 ```bash
-python -m unittest tests/test_core.py
-python -m unittest tests/test_models.py
-python -m unittest tests/test_pipelines.py
-python -m unittest tests/test_firebase_events.py
-python -m unittest tests/test_api_endpoints.py
-python -m unittest tests/test_end_to_end.py
+uv run python -m unittest tests/test_auth_rbac.py
+uv run python -m unittest tests/test_core.py
+uv run python -m unittest tests/test_models.py
+uv run python -m unittest tests/test_pipelines.py
+uv run python -m unittest tests/test_firebase_events.py
+uv run python -m unittest tests/test_api_endpoints.py
+uv run python -m unittest tests/test_end_to_end.py
 ```
 
 ---

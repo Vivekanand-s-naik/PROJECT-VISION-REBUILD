@@ -29,7 +29,7 @@ def main():
     parser.add_argument("--host", type=str, default=config.HOST, help="Host address to bind (default: 0.0.0.0)")
     parser.add_argument("--port", type=int, default=config.PORT, help="Port to listen on (default: 5000)")
     parser.add_argument("--debug", action="store_true", default=config.DEBUG, help="Run in debug mode")
-    parser.add_argument("--no-pipelines", action="store_true", help="Launch without starting camera pipelines immediately")
+    parser.add_argument("--start-pipelines", action="store_true", default=False, help="Start camera pipelines immediately on boot (default: standby)")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose debug logging")
     args = parser.parse_args()
 
@@ -56,7 +56,7 @@ def main():
     logger.info(f"Speech Notes available at: http://localhost:{args.port}/notes")
     logger.info(f"Blockchain Ledger at: http://localhost:{args.port}/blockchain")
 
-    app = create_app(start_pipelines=not args.no_pipelines)
+    app = create_app(start_pipelines=args.start_pipelines)
     app.run(host=args.host, port=args.port, debug=args.debug, threaded=True)
 
 if __name__ == '__main__':
