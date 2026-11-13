@@ -35,23 +35,12 @@ processed_data/
 *.tsv
 *.zip
 *.tar.gz
-*.npz
-*.npy
-*.h5
-*.sqlite3
-*.db
-*.txt
-*.jpg
 
 # Models, checkpoints and weights
 models/
 checkpoints/
 weights/
 logs/
-models/*.pt
-models/*.pth
-models/*.onnx
-models/*.h5
 
 # Jupyter
 .ipynb_checkpoints/
@@ -61,6 +50,8 @@ models/*.h5
 *.log
 *.out
 *.tmp
+*.temp
+*.cache
 tmp/
 temp/
 .cache/
@@ -68,12 +59,13 @@ temp/
 coverage/
 .coverage
 coverage.xml
-.dat
+
 # OpenCV / media dumps
 *.avi
 *.mp4
 *.mov
 *.mkv
+*.webm
 
 # Node / React
 node_modules/
@@ -110,6 +102,85 @@ Thumbs.db
 *.o
 *.a
 *.dll
+
+# Security / credentials
+serviceAccountKey.json
+*.p12
+*.pfx
+*.key
+*.pem
+*.crt
+*.p12
+
+# Audio files
+*.wav
+*.mp3
+*.ogg
+*.flac
+
+# Video files
+*.avi
+*.mp4
+*.mov
+*.mkv
+*.webm
+
+# Dataset and media directories
+images/
+antispoof/Dataset/
+static/
+templates/
+
+# YOLO / Ultralytics training runs
+runs/
+runs-detect/
+runs-segment/
+runs-classify/
+runs-pose/
+
+# TensorFlow / TensorBoard events
+*.tfevents.*
+events.out.tfevents.*
+
+# Python wheel files
+*.whl
+
+# Pickle files
+*.p
+*.pickle
+*.pkl
+
+# YAML config files (training runs, datasets)
+*.yaml
+*.yml
+
+# Face landmarks and model data files
+*.dat
+*.npy
+*.npz
+*.h5
+*.pth
+*.pt
+*.onnx
+*.pb
+*.savedmodel
+*.tflite
+*.mlmodel
+
+# IDE / Editor specific
+*.iml
+*.swo
+*.swp
+*.bak
+*.orig
+*.rej
+
+# Temporary and cache
+*.tmp
+*.temp
+*.cache
+*.log
+*.out
 
 # Misc
 *.bak
